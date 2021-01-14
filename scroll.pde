@@ -5,12 +5,8 @@ ScrollBarView horizontalScrollBar = new ScrollBarView(ScrollBarView.HORIZONTAL);
 void setSize(int width, int height) {
   this.width = width;
   this.height = height;
-  verticalScrollBar.setX(width - 40);
-  horizontalScrollBar.setY(height - 40);
-  verticalScrollBar.setWidth(40);
-  verticalScrollBar.setHeight(height - 40);
-  horizontalScrollBar.setHeight(40);
-  horizontalScrollBar.setWidth(width - 40);
+  verticalScrollBar.onSizeChanged(40, height - 40);
+  horizontalScrollBar.onSizeChanged(width - 40, 40);
 }
 
 void setup() {
@@ -21,9 +17,7 @@ void setup() {
   surface.setResizable(true);
   
   view.setup(P2D);
-  
-  view.setWidth(720);
-  view.setHeight(480);
+  view.onSizeChanged(720, 480);
 
   verticalScrollBar.setup(P2D);
   horizontalScrollBar.setup(P2D);
@@ -33,11 +27,13 @@ void setup() {
 }
 
 void draw(View view) {
-  view.canvas.beginDraw();
-  view.draw(view.canvas);
-  view.canvas.endDraw();
-  // draw the graphics object onto our screen
-  image(view.canvas, view.getX(), view.getY(), view.getWidth(), view.getHeight());
+  if (view.canvas != null) {
+    view.canvas.beginDraw();
+    view.draw(view.canvas);
+    view.canvas.endDraw();
+    // draw the graphics object onto our screen
+    image(view.canvas, view.getX(), view.getY(), view.getWidth(), view.getHeight());
+  }
 }
 
 // by default, draw() is called continuously
@@ -153,6 +149,11 @@ abstract class View {
   }
 
   int getHeight() { return viewHeight; }
+  
+  void onSizeChanged(int w, int h) {
+    setWidth(w);
+    setHeight(h);
+  }
 }
 
 class ScrollView extends View {
@@ -250,6 +251,18 @@ class ScrollBarView extends View {
   void draw(PGraphics canvas) {
     drawTrack(canvas);
     drawThumb(canvas);
+  }
+  
+  @Override
+  void onSizeChanged(int w, int h) {
+    super.onSizeChanged(w, h);
+    if (orientation == HORIZONTAL) {
+      // window height
+      setY(height - 40);
+    } else {
+      // window width
+      setX(width - 40);
+    }
   }
   
   boolean dragging = false;
