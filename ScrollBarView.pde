@@ -13,14 +13,8 @@ class ScrollBarView extends View {
   
   @Override
   void setup() {}
-    
-  void computeTrackSize() {
-    trackWidth = getWidth();
-    trackHeight = getHeight();
-  }
-
+  
   void drawTrack(PGraphics canvas) {
-    computeTrackSize();
     canvas.rectMode(CORNER);
     canvas.stroke(0);
     colorGrey(canvas);
@@ -52,7 +46,7 @@ class ScrollBarView extends View {
   }
 
   void drawThumb(PGraphics canvas) {
-    computeThumbSize();
+    //computeThumbSize();
     canvas.rectMode(CORNER);
     canvas.stroke(0);
     colorPurple(canvas);
@@ -61,19 +55,43 @@ class ScrollBarView extends View {
 
   @Override
   void draw(PGraphics canvas) {
-    drawTrack(canvas);
-    drawThumb(canvas);
+    if (trackWidth != 0 && trackHeight != 0 && thumbWidth != 0 && thumbHeight != 0) {
+      drawTrack(canvas);
+      drawThumb(canvas);
+    }
+  }
+  
+  void computeTrackSize() {
+    trackWidth = getWidth();
+    trackHeight = getHeight();
   }
   
   @Override
   void onSizeChanged(int w, int h) {
     super.onSizeChanged(w, h);
+
     if (orientation == HORIZONTAL) {
-      // window height
+      println("RESIZE HORIZONTAL");
+      // relocate track to new position
       setY(height - 40);
+      float locationPercent = (float) thumbX / (float) trackWidth;
+      computeTrackSize();
+      thumbX = (int) (trackWidth * locationPercent);
+      thumbHeight = trackHeight;
+      // document CAN be null here
+      if (document != null) {
+        float viewportWidth = width;
+        float contentWidth = document.getWidth();
+        float thumbPercentage = viewportWidth / contentWidth;
+        thumbWidth = (int) (trackWidth * thumbPercentage);
+      }
     } else {
-      // window width
+      // relocate track to new position
       setX(width - 40);
+      float locationPercent = (float) thumbY / (float) trackHeight;
+      computeTrackSize();
+      thumbY = (int) (trackHeight * locationPercent);
+      thumbWidth = trackWidth;
     }
   }
   
