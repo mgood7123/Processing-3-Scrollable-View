@@ -2,6 +2,15 @@ ScrollView view = new ScrollView();
 ScrollBarView verticalScrollBar = new ScrollBarView(ScrollBarView.VERTICAL);
 ScrollBarView horizontalScrollBar = new ScrollBarView(ScrollBarView.HORIZONTAL);
 
+void setSize(int width, int height) {
+  verticalScrollBar.setX(width - 40);
+  horizontalScrollBar.setY(height - 40);
+  verticalScrollBar.setWidth(40);
+  verticalScrollBar.setHeight(height - 40);
+  horizontalScrollBar.setHeight(40);
+  horizontalScrollBar.setWidth(width - 40);
+}
+
 void setup() {
   // initial window size
   size(640, 360, P2D);
@@ -9,13 +18,13 @@ void setup() {
   // allow window to be resized
   surface.setResizable(true);
   
-  view.setup(720, 480, P2D);
-  verticalScrollBar.setup(80, height - 40, P2D);
-  horizontalScrollBar.setup(width - 40, 40, P2D);
-
-  verticalScrollBar.setX(width - 40);
-  horizontalScrollBar.setY(height - 40);
+  view.setup(P2D);
   
+  view.setWidth(720);
+  view.setHeight(480);
+
+  verticalScrollBar.setup(P2D);
+  horizontalScrollBar.setup(P2D);
 }
 
 void draw(View view) {
@@ -23,7 +32,7 @@ void draw(View view) {
   view.draw(view.canvas);
   view.canvas.endDraw();
   // draw the graphics object onto our screen
-  image(view.canvas, view.getX(), view.getY());
+  image(view.canvas, view.getX(), view.getY(), view.getWidth(), view.getHeight());
 }
 
 // by default, draw() is called continuously
@@ -44,14 +53,15 @@ abstract class View {
   private int y = 0;
   private int width = 0;
   private int height = 0;
+  private String mode = null;
   
-  void size(int width, int height, String mode) {
-    setWidth(width);
-    setHeight(height);
-    canvas = createGraphics(width, height, mode);
-  }
-
-  abstract void setup(int width, int height, String mode);
+  protected void setup(String mode) {
+    this.mode = mode;
+    setup();
+  };
+  
+  abstract void setup();
+  
   abstract void draw(PGraphics canvas);
   
   void setX(int x) { this.x = x; }
@@ -60,10 +70,26 @@ abstract class View {
   void setY(int y) { this.y = y; }
   int getY() { return y; }
   
-  void setWidth(int width) { this.width = width; }
+  private void resize() {
+    if (width != 0 && height != 0 && mode != null) {
+      canvas = createGraphics(width, height, mode);
+    } else {
+      canvas = null;
+    }
+  }
+  
+  void setWidth(int width) {
+    this.width = width;
+    resize();
+  }
+  
   int getWidth() { return width; }
   
-  void setHeight(int height) { this.height = height; }
+  void setHeight(int height) { 
+    this.height = height;
+    resize();
+  }
+
   int getHeight() { return height; }
 }
 
@@ -73,10 +99,7 @@ class ScrollView extends View {
   PImage img;
   
   @Override
-  void setup(int width, int height, String mode) {
-    // create a graphics object with a dimension of 720p
-    size(width, height, mode);
-
+  void setup() {
     // load an image from the web
     img = loadImage("http://processing.org/img/processing-web.png");
   }
@@ -104,10 +127,7 @@ class ScrollBarView extends View {
   }
   
   @Override
-  void setup(int width, int height, String mode) {
-    // create a graphics object with a dimension of 720p
-    size(width, height, mode);
-  }
+  void setup() {}
   
   void colorPurple(PGraphics canvas) {
     canvas.fill(155, 155, 255);
