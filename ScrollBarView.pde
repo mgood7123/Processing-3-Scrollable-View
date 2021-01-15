@@ -21,32 +21,7 @@ class ScrollBarView extends View {
     canvas.rect(trackX, trackY, trackWidth, trackHeight);
   }
   
-  void computeThumbSize() {
-    if (orientation == HORIZONTAL) {
-      if (trackWidth == 0 || document.getWidth() == 0) {
-        thumbWidth = 10;
-      } else {
-        float windowWidth = width;
-        float documentWidth = document.getWidth();
-        float visiblePercent = windowWidth / documentWidth;
-        thumbWidth = (int) (trackWidth * visiblePercent);
-      }
-      thumbHeight = getHeight();
-    } else {
-      thumbWidth = getWidth();
-      if (trackHeight == 0 || document.getHeight() == 0) {
-        thumbHeight = 10;
-      } else {
-        float windowHeight = height;
-        float documentHeight = document.getHeight();
-        float visiblePercent = windowHeight / documentHeight;
-        thumbHeight = (int) (trackHeight * visiblePercent);
-      }
-    }
-  }
-
   void drawThumb(PGraphics canvas) {
-    //computeThumbSize();
     canvas.rectMode(CORNER);
     canvas.stroke(0);
     colorPurple(canvas);
@@ -55,9 +30,11 @@ class ScrollBarView extends View {
 
   @Override
   void draw(PGraphics canvas) {
-    if (trackWidth != 0 && trackHeight != 0 && thumbWidth != 0 && thumbHeight != 0) { //<>//
-      drawTrack(canvas);
-      drawThumb(canvas);
+    if (thumbSize < trackLength) {
+      if (trackWidth != 0 && trackHeight != 0 && thumbWidth != 0 && thumbHeight != 0) {
+        drawTrack(canvas);
+        drawThumb(canvas);
+      }
     }
   }
   
@@ -70,6 +47,11 @@ class ScrollBarView extends View {
   int maximum = 10;
   float viewportSize = 0;
   float oldViewportSize = 0;
+  float contentSize = 0;
+  float maximumContentOffset = 0;
+  float trackLength = 0;
+  int thumbSize = 0;
+  float viewportOffset = 0;
   boolean allowOverflow = false;
   
   public abstract class OverflowRunnable {
@@ -85,12 +67,6 @@ class ScrollBarView extends View {
     if (viewportSize != oldViewportSize) {
       oldViewportSize = viewportSize;
     }
-    
-    float contentSize = 0;
-    float maximumContentOffset = 0;
-    float trackLength = 0;
-    int thumbSize = 0;
-    float viewportOffset = 0;
 
     if (orientation == HORIZONTAL) {
       maximum = w;
@@ -99,7 +75,6 @@ class ScrollBarView extends View {
       trackLength = w;
       if (document != null) {
         contentSize = document.getWidth();
-        thumbWidth = thumbSize;
       }
       trackWidth = w;
       trackHeight = h;
@@ -125,14 +100,29 @@ class ScrollBarView extends View {
 
     if (orientation == HORIZONTAL) {
         thumbWidth = thumbSize;
-        if (maximumContentOffset <= 0) {
+        if (maximumContentOffset == 0) {
           thumbX = 0;
-          if (maximumContentOffset < 0 && !allowOverflow && onOverflow != null) {
-            onOverflow.run(document.getWidth());
+          if (document != null) {
+          }
+        } else if (maximumContentOffset < 0) {
+          thumbX = 0;
+          if (document != null) {
+            if (!allowOverflow) {
+              if (onOverflow != null) {
+                onOverflow.run(document.getWidth());
+              }
+            }
           }
         } else {
-          viewportOffset = document.scrollX;
-          thumbX = (int) (maximumThumbPosition * (viewportOffset / maximumContentOffset));
+          if (document != null) {
+            viewportOffset = document.scrollX;
+            if (!allowOverflow && viewportOffset > 0 && viewportOffset > maximumContentOffset) {
+              float offset = viewportOffset - maximumContentOffset;
+              viewportOffset -= offset;
+              document.scrollX = (int) viewportOffset;
+            }
+            thumbX = (int) (maximumThumbPosition * (viewportOffset / maximumContentOffset));
+          } //<>//
         }
     } else {
         thumbHeight = thumbSize;
@@ -146,10 +136,6 @@ class ScrollBarView extends View {
           thumbY = (int) (maximumThumbPosition * (viewportOffset / maximumContentOffset));
         }
     }
-    
-    viewportOffset = viewportOffset - (viewportSize - oldViewportSize);
-    viewportOffset = max(viewportOffset, -viewportSize);
-    viewportOffset = max(viewportOffset, 0); //<>//
   }
   
   boolean dragging = false;
