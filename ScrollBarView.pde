@@ -38,11 +38,6 @@ class ScrollBarView extends View {
     }
   }
   
-  void computeTrackSize() {
-    trackWidth = getWidth();
-    trackHeight = getHeight();
-  }
-  
   int minimum = 10;
   int maximum = 10;
   float viewportSize = 0;
@@ -99,42 +94,53 @@ class ScrollBarView extends View {
     float maximumThumbPosition = trackLength-thumbSize;
 
     if (orientation == HORIZONTAL) {
-        thumbWidth = thumbSize;
-        if (maximumContentOffset == 0) {
-          thumbX = 0;
-          if (document != null) {
-          }
-        } else if (maximumContentOffset < 0) {
-          thumbX = 0;
-          if (document != null) {
-            if (!allowOverflow) {
-              if (onOverflow != null) {
-                onOverflow.run(document.getWidth());
-              }
+      thumbWidth = thumbSize;
+      if (maximumContentOffset == 0) {
+        thumbX = 0;
+      } else if (maximumContentOffset < 0) {
+        thumbX = 0;
+        if (document != null) {
+          if (!allowOverflow) {
+            if (onOverflow != null) {
+              onOverflow.run(document.getWidth());
             }
           }
-        } else {
-          if (document != null) {
-            viewportOffset = document.scrollX;
-            if (!allowOverflow && viewportOffset > 0 && viewportOffset > maximumContentOffset) {
-              float offset = viewportOffset - maximumContentOffset;
-              viewportOffset -= offset;
-              document.scrollX = (int) viewportOffset;
-            }
-            thumbX = (int) (maximumThumbPosition * (viewportOffset / maximumContentOffset));
-          } //<>//
         }
-    } else {
-        thumbHeight = thumbSize;
-        if (maximumContentOffset <= 0) {
-          thumbY = 0;
-          if (maximumContentOffset < 0 && !allowOverflow && onOverflow != null) {
-            onOverflow.run(document.getHeight());
+      } else {
+        if (document != null) {
+          viewportOffset = document.scrollX;
+          if (!allowOverflow && viewportOffset > 0 && viewportOffset > maximumContentOffset) {
+            float offset = viewportOffset - maximumContentOffset;
+            viewportOffset -= offset;
+            document.scrollX = (int) viewportOffset;
           }
-        } else {
+          thumbX = (int) (maximumThumbPosition * (viewportOffset / maximumContentOffset));
+        } //<>//
+      }
+    } else {
+      thumbHeight = thumbSize;
+      if (maximumContentOffset == 0) {
+        thumbY = 0;
+      } else if (maximumContentOffset < 0) {
+        thumbY = 0;
+        if (document != null) {
+          if (!allowOverflow) {
+            if (onOverflow != null) {
+              onOverflow.run(document.getHeight());
+            }
+          }
+        }
+      } else {
+        if (document != null) {
           viewportOffset = document.scrollY;
+          if (!allowOverflow && viewportOffset > 0 && viewportOffset > maximumContentOffset) {
+            float offset = viewportOffset - maximumContentOffset;
+            viewportOffset -= offset;
+            document.scrollY = (int) viewportOffset;
+          }
           thumbY = (int) (maximumThumbPosition * (viewportOffset / maximumContentOffset));
         }
+      }
     }
   }
   
