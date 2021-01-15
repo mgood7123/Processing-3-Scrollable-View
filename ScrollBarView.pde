@@ -55,7 +55,7 @@ class ScrollBarView extends View {
 
   @Override
   void draw(PGraphics canvas) {
-    if (trackWidth != 0 && trackHeight != 0 && thumbWidth != 0 && thumbHeight != 0) {
+    if (trackWidth != 0 && trackHeight != 0 && thumbWidth != 0 && thumbHeight != 0) { //<>//
       drawTrack(canvas);
       drawThumb(canvas);
     }
@@ -66,33 +66,90 @@ class ScrollBarView extends View {
     trackHeight = getHeight();
   }
   
+  int minimum = 10;
+  int maximum = 10;
+  float viewportSize = 0;
+  float oldViewportSize = 0;
+  boolean allowOverflow = false;
+  
+  public abstract class OverflowRunnable {
+    abstract public void run(int value);
+  }
+  
+  OverflowRunnable onOverflow;
+  
   @Override
-  void onSizeChanged(int w, int h) {
-    super.onSizeChanged(w, h);
+  void onSizeChanged(int w, int h, int oldW, int oldH) {
+    super.onSizeChanged(w, h, oldW, oldH);
+ 
+    if (viewportSize != oldViewportSize) {
+      oldViewportSize = viewportSize;
+    }
+    
+    float contentSize = 0;
+    float maximumContentOffset = 0;
+    float trackLength = 0;
+    int thumbSize = 0;
+    float viewportOffset = 0;
 
     if (orientation == HORIZONTAL) {
-      println("RESIZE HORIZONTAL");
-      // relocate track to new position
-      setY(height - 40);
-      float locationPercent = (float) thumbX / (float) trackWidth;
-      computeTrackSize();
-      thumbX = (int) (trackWidth * locationPercent);
-      thumbHeight = trackHeight;
-      // document CAN be null here
+      maximum = w;
+      setY(height - 20);
+      viewportSize = width;
+      trackLength = w;
       if (document != null) {
-        float viewportWidth = width;
-        float contentWidth = document.getWidth();
-        float thumbPercentage = viewportWidth / contentWidth;
-        thumbWidth = (int) (trackWidth * thumbPercentage);
+        contentSize = document.getWidth();
+        thumbWidth = thumbSize;
       }
+      trackWidth = w;
+      trackHeight = h;
+      thumbHeight = h;
     } else {
-      // relocate track to new position
-      setX(width - 40);
-      float locationPercent = (float) thumbY / (float) trackHeight;
-      computeTrackSize();
-      thumbY = (int) (trackHeight * locationPercent);
-      thumbWidth = trackWidth;
+      maximum = h;
+      setX(width - 20);
+      viewportSize = height;
+      trackLength = h;
+      if (document != null) {
+        contentSize = document.getHeight();
+      }
+      trackHeight = h;
+      trackWidth = w;
+      thumbWidth = w;
     }
+    
+    maximumContentOffset = contentSize-viewportSize;
+    thumbSize = (int) ((viewportSize/contentSize) * trackLength);
+    thumbSize = max(thumbSize, minimum);
+    thumbSize = min(thumbSize, maximum);
+    float maximumThumbPosition = trackLength-thumbSize;
+
+    if (orientation == HORIZONTAL) {
+        thumbWidth = thumbSize;
+        if (maximumContentOffset <= 0) {
+          thumbX = 0;
+          if (maximumContentOffset < 0 && !allowOverflow && onOverflow != null) {
+            onOverflow.run(document.getWidth());
+          }
+        } else {
+          viewportOffset = document.scrollX;
+          thumbX = (int) (maximumThumbPosition * (viewportOffset / maximumContentOffset));
+        }
+    } else {
+        thumbHeight = thumbSize;
+        if (maximumContentOffset <= 0) {
+          thumbY = 0;
+          if (maximumContentOffset < 0 && !allowOverflow && onOverflow != null) {
+            onOverflow.run(document.getHeight());
+          }
+        } else {
+          viewportOffset = document.scrollY;
+          thumbY = (int) (maximumThumbPosition * (viewportOffset / maximumContentOffset));
+        }
+    }
+    
+    viewportOffset = viewportOffset - (viewportSize - oldViewportSize);
+    viewportOffset = max(viewportOffset, -viewportSize);
+    viewportOffset = max(viewportOffset, 0); //<>//
   }
   
   boolean dragging = false;
@@ -133,6 +190,12 @@ class ScrollBarView extends View {
                 thumbX = x;
               }
             }
+            if (document != null) {
+              float multiplier = (float)thumbX / (float) (trackWidth - thumbWidth);
+              float documentWidth = document.getWidth();
+              float absoluteOffset = multiplier * (float) (documentWidth - width);
+              document.scrollX = (int)absoluteOffset;
+            }
           } else {
             thumbY = event.getRawY() - yOffset;
             if (thumbY < 0) {
@@ -142,6 +205,12 @@ class ScrollBarView extends View {
               if (thumbY > y) {
                 thumbY = y;
               }
+            }
+            if (document != null) {
+              float multiplier = (float)thumbY / (float) (trackHeight - thumbHeight);
+              float documentHeight = document.getHeight();
+              float absoluteOffset = multiplier * (float) (documentHeight - height);
+              document.scrollY = (int)absoluteOffset;
             }
           }
         }

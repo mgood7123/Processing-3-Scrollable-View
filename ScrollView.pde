@@ -1,6 +1,4 @@
 class ScrollView extends View {
-  int scrollX = 0;
-  int scrollY = 0;
   PImage img;
   
   @Override
@@ -13,9 +11,7 @@ class ScrollView extends View {
   void draw(PGraphics canvas) {
     canvas.background(0);
     if (img != null) {
-      for (int i = 0; i < 5; i++) {
-        canvas.image(img, 0, img.height * i);
-      }
+      canvas.image(img, 0, 0, getWidth(), getHeight());
     }
   }
 }

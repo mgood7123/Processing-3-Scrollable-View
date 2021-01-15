@@ -2,6 +2,8 @@ abstract class View {
   PGraphics canvas = null;
   private int viewX = 0;
   private int viewY = 0;
+  int scrollX = 0;
+  private int scrollY = 0;
   private int viewWidth = 0;
   private int viewHeight = 0;
   private String mode = null;
@@ -17,7 +19,7 @@ abstract class View {
   
   abstract void draw(PGraphics canvas);
   
-    void colorPurple(PGraphics canvas) {
+  void colorPurple(PGraphics canvas) {
     canvas.fill(155, 155, 255);
   }
 
@@ -53,7 +55,7 @@ abstract class View {
 
   int getHeight() { return viewHeight; }
   
-  void onSizeChanged(int w, int h) {
+  void onSizeChanged(int w, int h, int oldW, int oldH) {
     setWidth(w);
     setHeight(h);
   }

@@ -2,22 +2,26 @@ ScrollView view = new ScrollView();
 ScrollBarView verticalScrollBar = new ScrollBarView(ScrollBarView.VERTICAL);
 ScrollBarView horizontalScrollBar = new ScrollBarView(ScrollBarView.HORIZONTAL);
 
+void callOnSizeChanged(View view, int w, int h) {
+  view.onSizeChanged(w, h, view.getWidth(), view.getHeight());
+}
+
 void setSize(int width, int height) {
   this.width = width;
   this.height = height;
-  verticalScrollBar.onSizeChanged(40, height - 40);
-  horizontalScrollBar.onSizeChanged(width - 40, 40);
+  callOnSizeChanged(verticalScrollBar, 20, height - 20);
+  callOnSizeChanged(horizontalScrollBar, width - 20, 20);
 }
 
 void setup() {
   // initial window size
   size(640, 360, P2D);
-  
+
   // allow window to be resized
   surface.setResizable(true);
   
   view.setup(P2D);
-  view.onSizeChanged(720, 480);
+  callOnSizeChanged(view, 720, 480);
 
   verticalScrollBar.setup(P2D);
   horizontalScrollBar.setup(P2D);
@@ -32,13 +36,14 @@ void draw(View view) {
     view.draw(view.canvas);
     view.canvas.endDraw();
     // draw the graphics object onto our screen
-    image(view.canvas, view.getX(), view.getY(), view.getWidth(), view.getHeight());
+    image(view.canvas, view.getX() - view.scrollX, view.getY() - view.scrollY, view.getWidth(), view.getHeight());
   }
 }
 
 // by default, draw() is called continuously
 
 void draw() {
+  background(0);
   draw(view);
   draw(verticalScrollBar);
   draw(horizontalScrollBar);
